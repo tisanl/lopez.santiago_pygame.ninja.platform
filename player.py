@@ -1,11 +1,14 @@
 from auxiliar import SurfaceManager as sf
 import pygame as pg
 from constantes import *
+from bullet import Bullet
 
 SPRITE_IDLE = "C:/Users/Usuario/Desktop/Proyecto Final/Proyecto Final/player_sprites/idle/Idle__00{0}.png"
 SPRITE_RUN = "C:/Users/Usuario/Desktop/Proyecto Final/Proyecto Final/player_sprites/run/Run__00{0}.png"
 SPRITE_JUMP = "C:/Users/Usuario/Desktop/Proyecto Final/Proyecto Final/player_sprites/jump/Jump__00{0}.png"
 SPRITE_FALL = "C:/Users/Usuario/Desktop/Proyecto Final/Proyecto Final/player_sprites/glide/Glide_00{0}.png"
+
+SPRITE_BULLET = "C:/Users/Usuario/Desktop/Proyecto Final/Proyecto Final/player_sprites/Kunai.png"
 
 
 class Player(pg.sprite.Sprite):
@@ -46,11 +49,21 @@ class Player(pg.sprite.Sprite):
         self.__is_jumping = False                                   # Si esta saltando
         self.__is_falling = False                                   # Si esta cayendo
         self.__frame_rate_movement = frame_rate_movement            # Variable que guarda la velocidad con la que se ejecuta el movimiento
-    
+        self.__player_foot = coord_y + self.rect.height
+
+        # Bullet
+        self.__bullet_speed = 7
+        self.__bullet_scale = 0.3
+        self.__shoot_time = 0
+        self.__bullet_cooldown = 100
+
+        # Estadisticas
+        self.__lives = 3
+        self.__point = 0
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # -----------------------------------------------------  MANEJO DE EVENTOS  ---------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
-    def events(self):
+    def events(self,delta_ms,bullet_group):
         keys = pg.key.get_pressed()
 
         # Run
@@ -76,18 +89,22 @@ class Player(pg.sprite.Sprite):
         if (not keys[pg.K_SPACE] or (self.rect.y <= self.__jump_limit)) and self.__is_jumping == True:
             self.__is_jumping = False
             self.__is_falling = True
-            print("helouda")
 
         # Fall
-        if self.rect.y <= GROUND_LEVEL and self.__is_jumping == False:
+        if self.__player_foot <= GROUND_LEVEL and self.__is_jumping == False:
             self.__is_falling = True
             if keys[pg.K_RIGHT] or self.__is_looking_right:
                 self.fall("Right")
             elif keys[pg.K_LEFT] or self.__is_looking_right == False:
                 self.fall("Left")
-        elif self.rect.y >= GROUND_LEVEL - 100 and self.__is_falling == True:
+        elif self.__player_foot >= GROUND_LEVEL and self.__is_falling == True:
             self.__is_falling = False
-    
+            self.__move_y = 0
+        
+        # Shoot
+        if keys[pg.K_z]:
+            self.shoot(delta_ms,bullet_group)
+
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  FUNCIONES DE ACCIONES  -------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -124,6 +141,12 @@ class Player(pg.sprite.Sprite):
                 self.__set_y_animations_preset(self.__speed_run, self.__gravity, self.__fall_r, True)
             case 'Left':
                 self.__set_y_animations_preset(-self.__speed_run, self.__gravity, self.__fall_l, False)
+    
+    def shoot(self,delta_ms,bullet_group):
+        self.__shoot_time += delta_ms
+        if self.__shoot_time >= self.__bullet_cooldown:
+            self.__shoot_time = 0
+            bullet_group.add(Bullet(SPRITE_BULLET,self.__rect.x,self.__rect.centery,self.__bullet_speed,self.__is_looking_right,scale=self.__bullet_scale))
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------  FUNCIONES DE POSICION EN PANTALLA  -------------------------------------------------------------- #
@@ -180,12 +203,12 @@ class Player(pg.sprite.Sprite):
                 #     self.__is_jumping = False
                 #     self.__move_y = 0
     
-    def update(self, delta_ms):
-        self.events()
+    def update(self, delta_ms,bullet_group):
+        self.__player_foot = self.rect.y + self.rect.height
+        self.events(delta_ms,bullet_group)
         self.do_movement(delta_ms)
         self.do_animation(delta_ms)
     
-
         #if DEBUG:
             #pg.draw.rect(screen, 'red', self.rect)
             #pg.draw.rect(screen, 'green', self.rect.bottom)
@@ -206,3 +229,10 @@ class Player(pg.sprite.Sprite):
     @rect.setter
     def rect(self,rect):
         self.__rect = rect
+    
+    @property
+    def bullet_group(self):
+        return self.__bullet_group
+    @bullet_group.setter
+    def bullet_group(self,bullet_group):
+        self.__bullet_group = bullet_group
