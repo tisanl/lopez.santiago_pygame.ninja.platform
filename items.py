@@ -2,10 +2,10 @@ import pygame as pg
 from constantes import *
 from auxiliar import SurfaceManager as sf
 
-HEART_SPRITE = "C:/Users/Usuario/Desktop/Proyecto Final/items_sprites/heart_0.png"
-EMPTY_HEART_SPRITE = "C:/Users/Usuario/Desktop/Proyecto Final/items_sprites/heart_1.png"
+HEART_SPRITE = "items_sprites/heart_0.png"
+EMPTY_HEART_SPRITE = "items_sprites/heart_1.png"
 
-COIN_TWIST = "C:/Users/Usuario/Desktop/Proyecto Final/items_sprites/coin_0{0}.png"
+COIN_TWIST = "items_sprites/coin_0{0}.png"
 
 
 class Heart(pg.sprite.Sprite):

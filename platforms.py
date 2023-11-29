@@ -2,16 +2,16 @@ import pygame as pg
 from constantes import *
 from auxiliar import SurfaceManager as sf
 
-GRASS_PLATFORM = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/platform_grass.png"
-GROUND = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/ground.png"
-BLACK_SPRITE = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/black.png"
-MARCO_ARRIBA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_arriba.png"
-MARCO_ABAJO = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_abajo.png"
-MARCO_DERECHA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_der.png"
-MARCO_IZQUIERDA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_izq.png"
-MARCO_HORIZONTAL = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_horizontal.png"
-MARCO_VERTICAL = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_vertical.png"
-MARCO_ESQUINA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/marco_esquina.png"
+GRASS_PLATFORM = "platform_sprites/platform_grass.png"
+GROUND = "platform_sprites/ground.png"
+BLACK_SPRITE = "platform_sprites/black.png"
+MARCO_ARRIBA = "platform_sprites/marco_arriba.png"
+MARCO_ABAJO = "platform_sprites/marco_abajo.png"
+MARCO_DERECHA = "platform_sprites/marco_der.png"
+MARCO_IZQUIERDA = "platform_sprites/marco_izq.png"
+MARCO_HORIZONTAL = "platform_sprites/marco_horizontal.png"
+MARCO_VERTICAL = "platform_sprites/marco_vertical.png"
+MARCO_ESQUINA = "platform_sprites/marco_esquina.png"
 
 class Marco:
     def __init__(self):

@@ -1,6 +1,7 @@
 import pygame as pg
 from player import Player
 from enemy import Enemy_Bug
+from enemy import Enemy_Alien
 from constantes import *
 from auxiliar import SurfaceManager as sf
 from gui import Cursor
@@ -9,12 +10,13 @@ from gui import MenuPrincipal
 from platforms import Platform
 from platforms import Marco
 from items import Coin
+from marcador_tiempo import MarcadorTiempo
 
-MURO_PIEDRA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/muro_piedra.png"
-PISO_PIEDRA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/piso_piedra.png"
-NUBE_IZQUIERDA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/nube_izquierda.png"
-NUBE_DERECHA = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/nube_derecha.png"
-NUBE_CENTRO = "C:/Users/Usuario/Desktop/Proyecto Final/platform_sprites/nube_medio.png"
+MURO_PIEDRA = "platform_sprites/muro_piedra.png"
+PISO_PIEDRA = "platform_sprites/piso_piedra.png"
+NUBE_IZQUIERDA = "platform_sprites/nube_izquierda.png"
+NUBE_DERECHA = "platform_sprites/nube_derecha.png"
+NUBE_CENTRO = "platform_sprites/nube_medio.png"
 
 class Game:
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -43,6 +45,8 @@ class Game:
         self.menu_principal = MenuPrincipal()
         self.menu_seleccion_nivel = MenuSeleccionNivel()
         self.cursor = pg.sprite.GroupSingle(Cursor())
+
+        self.timer = None
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ------------------------------------------------------  FUNCIONES DE GUI  ---------------------------------------------------------------------- #
@@ -100,6 +104,8 @@ class Game:
         self.coin_group.update(delta_ms)
         self.coin_group.draw(screen)
 
+        self.timer.draw(screen)
+
     def nivel_1(self):
         # Marco
         self.marco = Marco().platform_group
@@ -132,8 +138,8 @@ class Game:
                     self.platform_group.add(Platform(NUBE_DERECHA,x,nube["y"],transparent=True,is_platform=True,scale=2))
         
         # Enemigos
-        enemy = Enemy_Bug(500, GROUND_LEVEL, limit_left=400,limit_right=750, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2)
-        self.enemy_group.add(enemy)
+        self.enemy_group.add(Enemy_Bug(500, GROUND_LEVEL, limit_left=400,limit_right=750, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
+        self.enemy_group.add(Enemy_Alien(50, 200, frame_rate_animation=400,scale=1.5))
 
         # Monedas
         monedas = [{"largo": 5, "x" : 50, "y" : 320, "salteo" : True, "espacio" : 80},
@@ -152,6 +158,8 @@ class Game:
                         self.coin_group.add(Coin(x,grupo["y"]-30,scale=2))
                 else:
                     self.coin_group.add(Coin(x,grupo["y"],scale=2))
+        
+        self.timer = MarcadorTiempo(3,140,36,20)
 
     
     def nivel_2(self):

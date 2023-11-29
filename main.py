@@ -15,12 +15,18 @@ clock = pg.time.Clock()
 # Juego
 game = Game()
 
+evento_1_segundo = pg.USEREVENT
+pg.time.set_timer(evento_1_segundo, 1000)
+paso_1_segundo = False
+
 while True:
     lista_eventos = pg.event.get()
     for event in lista_eventos:
         if event.type == pg.QUIT:
                 pg.quit() 
                 sys.exit()
+        if event.type == evento_1_segundo and game.is_running_level:
+            game.timer.update()
 
     # Se actualiza el tiempo transcurrido
     delta_ms = clock.tick(FPS)

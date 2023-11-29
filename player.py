@@ -4,13 +4,13 @@ from constantes import *
 from bullet import Bullet
 from items import Heart
 
-SPRITE_IDLE = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/idle/Idle__00{0}.png"
-SPRITE_RUN = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/run/Run__00{0}.png"
-SPRITE_JUMP = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/jump/Jump__00{0}.png"
-SPRITE_SHOOT = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/jump_throw/Jump_Throw__00{0}.png"
-SPRITE_JUMP_SHOOT = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/jump_throw/Jump_Throw__00{0}.png"
+SPRITE_IDLE = "player_sprites/idle/Idle__00{0}.png"
+SPRITE_RUN = "player_sprites/run/Run__00{0}.png"
+SPRITE_JUMP = "player_sprites/jump/Jump__00{0}.png"
+SPRITE_SHOOT = "player_sprites/jump_throw/Jump_Throw__00{0}.png"
+SPRITE_JUMP_SHOOT = "player_sprites/jump_throw/Jump_Throw__00{0}.png"
 
-SPRITE_BULLET = "C:/Users/Usuario/Desktop/Proyecto Final/player_sprites/Kunai.png"
+SPRITE_BULLET = "player_sprites/Kunai.png"
 
 
 class Player(pg.sprite.Sprite):

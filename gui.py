@@ -4,19 +4,19 @@ from auxiliar import SurfaceManager as sf
 import sys
 
 # BOTONES MENU PRINCIPAL
-FONDO_MENU_PRINCIPAL = "C:/Users/Usuario/Desktop/Proyecto Final/background/game_background_1.png"
-MENU_PRINCIPAL_TITULO = "C:/Users/Usuario/Desktop/Proyecto Final/botones/menu_principal_titulo.png"
-MENU_PRINCIPAL_SELECCION_NIVEL = "C:/Users/Usuario/Desktop/Proyecto Final/botones/menu_principal_seleccion_nivel.png"
-MENU_PRINCIPAL_PUNUACIONES = "C:/Users/Usuario/Desktop/Proyecto Final/botones/menu_principal_puntuaciones.png"
-MENU_PRINCIPAL_SALIR = "C:/Users/Usuario/Desktop/Proyecto Final/botones/menu_principal_salir.png"
+FONDO_MENU_PRINCIPAL = "background/game_background_1.png"
+MENU_PRINCIPAL_TITULO = "botones/menu_principal_titulo.png"
+MENU_PRINCIPAL_SELECCION_NIVEL = "botones/menu_principal_seleccion_nivel.png"
+MENU_PRINCIPAL_PUNUACIONES = "botones/menu_principal_puntuaciones.png"
+MENU_PRINCIPAL_SALIR = "botones/menu_principal_salir.png"
 
-CURSOR = "C:/Users/Usuario/Desktop/Proyecto Final/botones/cursor.png"
+CURSOR = "botones/cursor.png"
 
-SELECCION_NIVEL_TITULO = "C:/Users/Usuario/Desktop/Proyecto Final/botones/seleccion_nivel_titulo.png"
-SELECCION_NIVEL_1 = "C:/Users/Usuario/Desktop/Proyecto Final/botones/seleccion_nivel_1.png"
-SELECCION_NIVEL_2 = "C:/Users/Usuario/Desktop/Proyecto Final/botones/seleccion_nivel_2.png"
-SELECCION_NIVEL_3 = "C:/Users/Usuario/Desktop/Proyecto Final/botones/seleccion_nivel_3.png"
-VOLVER = "C:/Users/Usuario/Desktop/Proyecto Final/botones/volver.png"
+SELECCION_NIVEL_TITULO = "botones/seleccion_nivel_titulo.png"
+SELECCION_NIVEL_1 = "botones/seleccion_nivel_1.png"
+SELECCION_NIVEL_2 = "botones/seleccion_nivel_2.png"
+SELECCION_NIVEL_3 = "botones/seleccion_nivel_3.png"
+VOLVER = "botones/volver.png"
 
 
 class Cursor(pg.sprite.Sprite):
