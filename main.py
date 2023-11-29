@@ -32,6 +32,17 @@ while True:
         game.mostrar_menu_seleccion_nivel(screen,lista_eventos,delta_ms)
     
     if game.level_selected != None:
+        match game.level_selected:
+            case 1:
+                game.nivel_1()
+            case 2:
+                game.nivel_2()
+            case 3:
+                game.nivel_3()
+        game.level_selected = None
+        game.is_running_level = True
+
+    if game.is_running_level:
         game.run(screen,delta_ms)
 
     pg.display.update()
