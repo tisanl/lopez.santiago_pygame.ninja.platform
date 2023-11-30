@@ -1,8 +1,5 @@
 import pygame as pg
-from auxiliar import SurfaceManager as sf
 from constantes import *
-
-FONT = "fonts/kenvector_future.ttf"
 
 class MarcadorTiempo:
     def __init__(self, minutos, pos_x, pos_y,size=10):
@@ -33,3 +30,22 @@ class MarcadorTiempo:
     def draw(self,screen):
         screen.blit(self.__text, self.__pos)
 
+class MarcadorPuntuacion:
+    def __init__(self, puntuacion, pos_x, pos_y,size=10):
+        self.__puntuacion = puntuacion
+        
+        self.__pos_x = pos_x
+        self.__pos_y = pos_y
+        self.__font = pg.font.Font(FONT, size)
+
+        texto = "{0}".format(str(self.__puntuacion).zfill(6))
+        self.__text = self.__font.render(texto, True, "white")
+        self.__pos = (self.__pos_x, self.__pos_y)
+
+    def update(self, puntuacion):
+        texto = "{0}".format(str(puntuacion).zfill(6))
+        self.__text = self.__font.render(texto, True, "white")
+        self.__pos = (self.__pos_x, self.__pos_y)
+    
+    def draw(self,screen):
+        screen.blit(self.__text, self.__pos)

@@ -3,6 +3,7 @@ import pygame as pg
 from constantes import *
 from bullet import Bullet
 from items import Heart
+from marcadores import MarcadorPuntuacion
 
 SPRITE_IDLE = "player_sprites/idle/Idle__00{0}.png"
 SPRITE_RUN = "player_sprites/run/Run__00{0}.png"
@@ -19,6 +20,43 @@ class Player(pg.sprite.Sprite):
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     def __init__(self, coord_x, coord_y, frame_rate_animation=100, frame_rate_movement=100, speed_run=10, gravity=10, jump=30, jump_max_high=150, scale=1):
         super().__init__()
+        
+        # Vida del Jugador
+        self.lives_init = 3                     # Vida original del Jugador
+        self.lives_actual = self.lives_init     # Vida actual del Jugador
+        self.lives_group = pg.sprite.Group()    # Grupo que guardara los corazones
+
+        # Puntaje
+        self.__points = 0                          # Puntaje del Jugador en el nivel, se actualiza dinamicamente
+        self.__coin_points = 100
+        self.marcador_puntuacion = MarcadorPuntuacion(self.__points,655,36,20)
+
+        # Estadisticas
+        self.__speed_run = speed_run            # La velocidad del Jugador cuando corre
+        self.__gravity = gravity                # La velocidad con la que el Jugador cae
+        self.__jump = jump                      # La velocidad con la que el Jugador sube cuando salta
+        self.__jump_max_high = jump_max_high    # La altura maxima que puede alcanzar el salto
+
+        # Variables auxiliares
+        self.__is_looking_right = True      # Bool que guarda la direccion donde mira el Jugador
+        self.was_loogking_right = True      # Bool que guarda la direccion en la que miraba el Jugador
+        self.__is_jumping = False           # Si esta saltando
+        self.__is_jumping = False           # Si esta saltando
+        self.__jump_limit = 0               # Limite del salto qeu se actualiza cuando el Jugador salta
+        self.__is_falling = True            # Si esta cayendo
+        self.__is_shooting = False          # Si esta disparando
+
+        # Cosas de balas
+        self.__bullet_speed = 7
+        self.__bullet_scale = 0.3
+        self.__shoot_time = 0
+        self.__bullet_cooldown = 30
+
+        self.bullet_group = pg.sprite.Group()
+
+        # Tiempo para hacer que el jugador no reciba daño por un ratito si le acaba de pasar
+        self.__damage_frame_time = 500
+        self.__player_damage_time = 0
     
         # Animaciones
         self.__iddle_r = sf.getSurfaceFromSeparateFiles(SPRITE_IDLE,0,9,flip=False,scale=scale)
@@ -51,38 +89,10 @@ class Player(pg.sprite.Sprite):
         self.__move_y = 0                   # La posicion en y del Jugador
         self.__player_move_time = 0         # Variable que guarda el tiempo transcurrido desde que ejecuto un movimiento
 
-        # Variables auxiliares
-        self.__is_looking_right = True      # Bool que guarda la direccion donde mira el Jugador
-        self.was_loogking_right = True      # Bool que guarda la direccion en la que miraba el Jugador
-        self.__is_jumping = False           # Si esta saltando
-        self.__is_jumping = False           # Si esta saltando
-        self.__jump_limit = 0               # Limite del salto qeu se actualiza cuando el Jugador salta
-        self.__is_falling = True            # Si esta cayendo
-        self.__is_shooting = False          # Si esta disparando
-        
-
-        # Estadisticas
-        self.__point = 0                        # Puntaje del Jugador en el nivel, se actualiza dinamicamente
-        self.__speed_run = speed_run            # La velocidad del Jugador cuando corre
-        self.__gravity = gravity                # La velocidad con la que el Jugador cae
-        self.__jump = jump                      # La velocidad con la que el Jugador sube cuando salta
-        self.__jump_max_high = jump_max_high    # La altura maxima que puede alcanzar el salto
-
-        # Vida del Jugador
-        self.lives_init = 3                     # Vida original del Jugador
-        self.lives_actual = self.lives_init     # Vida actual del Jugador
-        self.lives_group = pg.sprite.Group()    # Grupo que guardara los corazones
-
-        # Bullet
-        self.__bullet_speed = 7
-        self.__bullet_scale = 0.3
-        self.__shoot_time = 0
-        self.__bullet_cooldown = 30
-
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # -----------------------------------------------------  MANEJO DE EVENTOS  ---------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
-    def events(self,delta_ms,bullet_group,platform_group):
+    def events(self,delta_ms,platform_group):
         keys = pg.key.get_pressed()
 
         # Run
@@ -126,12 +136,11 @@ class Player(pg.sprite.Sprite):
 
         # Shoot
         if keys[pg.K_z] and not self.__is_shooting:
-            self.shoot(delta_ms,bullet_group)
+            self.shoot(delta_ms)
         elif self.__is_shooting and self.__frame == len(self.__shoot_r) - 1:
             self.__frame_rate_animation = 100
             self.__is_shooting = False
-            
-        
+
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  FUNCIONES DE ACCIONES  -------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -203,7 +212,7 @@ class Player(pg.sprite.Sprite):
                     else:
                         self.__set_y_animations_preset(0,self.__gravity, self.__jump_l, False)
     
-    def shoot(self,delta_ms,bullet_group):
+    def shoot(self,delta_ms):
         self.__shoot_time += delta_ms
         if self.__shoot_time >= self.__bullet_cooldown:
             self.__frame_rate_animation = self.__bullet_cooldown
@@ -215,10 +224,35 @@ class Player(pg.sprite.Sprite):
                     self.__set_x_animations_preset(0, self.__shoot_l, False)
             self.__is_shooting = True
             self.__shoot_time = 0
-            bullet_group.add(Bullet(SPRITE_BULLET,self.__rect.x,self.__rect.centery,self.__bullet_speed,self.__is_looking_right,scale=self.__bullet_scale))
+            self.bullet_group.add(Bullet(SPRITE_BULLET,self.__rect.x,self.__rect.centery,self.__bullet_speed,self.__is_looking_right,scale=self.__bullet_scale))
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
-    # ---------------------------------------------  FUNCIONES DE VIDA DEL JUGADOR  ------------------------------------------------------------------ #
+    # ---------------------------------------------------  FUNCIONES DE COLICIONES  ------------------------------------------------------------------ #
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    def enemy_collitions(self, delta_ms, enemy_group):
+        self.__player_foot = pg.Rect(self.rect.x + 3, self.rect.y + self.rect.height + 1, self.rect.width -6, 1)
+        self.player_side_left = pg.Rect(self.rect.x + 3, self.rect.y + 10, 1, self.rect.height - 20)
+        self.player_side_right = pg.Rect(self.rect.x + self.rect.width + 3, self.rect.y + 10, 1, self.rect.height - 20)
+        
+        colide = False
+        self.__player_damage_time += delta_ms
+        if pg.sprite.spritecollide(self, enemy_group, False):
+            colide = True
+        for enemy in enemy_group:
+            if enemy.is_shooter:
+                if pg.sprite.spritecollide(self, enemy.bullet_group, True):
+                    colide = True
+        if colide and self.__player_damage_time >= self.__damage_frame_time:
+            self.__player_damage_time = 0
+            self.lives_actual -= 1
+    
+    def coin_collitions(self, coin_group):
+        if pg.sprite.spritecollide(self, coin_group, True):    
+            self.__points += self.__coin_points
+
+        
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    # ---------------------------------------------  FUNCIONES DE VIDA Y PUNTUACION  ----------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ # 
     def update_lives(self):
         group = pg.sprite.Group()
@@ -230,6 +264,10 @@ class Player(pg.sprite.Sprite):
             group.add(Heart(x,36,empty=True,scale=1.5))
         self.lives_group = group
     
+    def update_puntuacion(self, coin_group):
+        if pg.sprite.spritecollide(self, coin_group, True):
+            self.__points += self.__coin_points
+
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------  FUNCIONES DE POSICION EN PANTALLA  -------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ # 
@@ -289,17 +327,14 @@ class Player(pg.sprite.Sprite):
             else:
                 self.__frame = 0
             self.image = self.__animacion_actual[self.__frame]
-
-                # if self.__is_jumping:
-                #     self.__is_jumping = False
-                #     self.__move_y = 0
     
-    def update(self, delta_ms,bullet_group,platform_group):
-        self.__player_foot = pg.Rect(self.rect.x + 3, self.rect.y + self.rect.height + 1, self.rect.width -6, 1)
-        self.player_side_left = pg.Rect(self.rect.x + 3, self.rect.y + 10, 1, self.rect.height - 20)
-        self.player_side_right = pg.Rect(self.rect.x + self.rect.width + 3, self.rect.y + 10, 1, self.rect.height - 20)
-        self.events(delta_ms,bullet_group,platform_group)
+    def update(self, delta_ms,platform_group,enemy_group,coin_group):
+        self.bullet_group.update()
+        self.enemy_collitions(delta_ms, enemy_group)
+        self.events(delta_ms,platform_group)
+        self.coin_collitions(coin_group)
         self.update_lives()
+        self.marcador_puntuacion.update(self.__points)
         self.do_movement(delta_ms,platform_group)
         self.do_animation(delta_ms)
     

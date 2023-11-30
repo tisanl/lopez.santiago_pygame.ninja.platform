@@ -10,7 +10,7 @@ from gui import MenuPrincipal
 from platforms import Platform
 from platforms import Marco
 from items import Coin
-from marcador_tiempo import MarcadorTiempo
+from marcadores import MarcadorTiempo
 
 MURO_PIEDRA = "platform_sprites/muro_piedra.png"
 PISO_PIEDRA = "platform_sprites/piso_piedra.png"
@@ -79,39 +79,48 @@ class Game:
         pg.mouse.set_visible(True)
         screen.blit(self.menu_principal.fondo, self.menu_principal.fondo.get_rect())
 
-        self.marco.draw(screen)
+        # Se actualizan y dibujan las monedas
+        self.coin_group.update(delta_ms)
+        self.coin_group.draw(screen)
+
+        # Se actualizan y dibujan enemigos
+        self.enemy_group.update(delta_ms,self.player)
+        self.enemy_group.draw(screen)
+
+        for enemy in self.enemy_group:              # Por cada enemigo
+            if enemy.is_shooter:                    # Si dispara
+                enemy.bullet_group.draw(screen)     # Dibuja el grupo de balas enemigas
+                #pg.draw.rect(screen, 'green', enemy.shooting_colition_rect)
+
+        # Se upgradea y dibuja al player
+        self.player.update(delta_ms,self.platform_group, self.enemy_group, self.coin_group)
+        self.player.draw(screen)
+        self.player.sprite.bullet_group.draw(screen)            # Se dibuja su grupo de balas
+        self.player.sprite.marcador_puntuacion.draw(screen)     # Se dibuja el marcoador de puntuacion
+        self.player.sprite.lives_group.draw(screen)             # Se dibuja las vidas del jugador
+
+        # Se dibuja el timer del juego
+        self.timer.draw(screen)
+
+        # Se sibuja el entorno, plataformas y el marco
         self.platform_group.draw(screen)
+        self.marco.draw(screen)
+        
         #for platform in self.platform_group:
             #pg.draw.rect(screen, 'red', platform.rect_platform)
             #pg.draw.rect(screen, 'green', platform.rect)
 
-        self.player.update(delta_ms, self.bullet_group,self.platform_group)
-        self.player.draw(screen)
-        self.player.sprite.lives_group.draw(screen)
-        
-        if False:
-            pg.draw.rect(screen, 'red', self.player.sprite.player_foot)
-            pg.draw.rect(screen, 'red', self.player.sprite.player_side_right)
-            pg.draw.rect(screen, 'red', self.player.sprite.player_side_left)
-
-        # Bullet Group
-        self.bullet_group.update()
-        self.bullet_group.draw(screen)
-
-        self.enemy_group.update(delta_ms, self.bullet_group,self.player)
-        self.enemy_group.draw(screen)
-
-        self.coin_group.update(delta_ms)
-        self.coin_group.draw(screen)
-
-        self.timer.draw(screen)
+        #if False:
+            #pg.draw.rect(screen, 'red', self.player.sprite.player_foot)
+            #pg.draw.rect(screen, 'red', self.player.sprite.player_side_right)
+            #pg.draw.rect(screen, 'red', self.player.sprite.player_side_left)
 
     def nivel_1(self):
         # Marco
         self.marco = Marco().platform_group
         
         # Player
-        player = Player(50, 300, frame_rate_animation=50,frame_rate_movement=40, speed_run=10,scale=0.15)
+        player = Player(50, 420, frame_rate_animation=50,frame_rate_movement=40, speed_run=10,scale=0.15)
         self.player = pg.sprite.GroupSingle(player)
 
         # Plataformas
@@ -138,8 +147,8 @@ class Game:
                     self.platform_group.add(Platform(NUBE_DERECHA,x,nube["y"],transparent=True,is_platform=True,scale=2))
         
         # Enemigos
-        self.enemy_group.add(Enemy_Bug(500, GROUND_LEVEL, limit_left=400,limit_right=750, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
-        self.enemy_group.add(Enemy_Alien(50, 200, frame_rate_animation=400,scale=1.5))
+        self.enemy_group.add(Enemy_Bug(500, GROUND_LEVEL, True, limit_left=400,limit_right=750, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
+        self.enemy_group.add(Enemy_Alien(50, 200, True, frame_rate_animation=400,scale=2))
 
         # Monedas
         monedas = [{"largo": 5, "x" : 50, "y" : 320, "salteo" : True, "espacio" : 80},

@@ -18,6 +18,6 @@ class Bullet(pg.sprite.Sprite):
             self.rect.x += self.speed
         else:
             self.rect.x -= self.speed
-        if self.rect.x >= ANCHO_VENTANA + 100 or self.rect.x <= -100:
+        if self.rect.x >= ANCHO_VENTANA or self.rect.x <= 0:
             self.kill()
         #pygame.sprite.spritecollide(self, enemy_group, True)
