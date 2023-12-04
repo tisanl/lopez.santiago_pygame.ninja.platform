@@ -10,17 +10,24 @@ ALIEN_IDLE = "enemy_sprites/alien_idle_0{0}.png"
 ALIEN_DEATH = "enemy_sprites/alien_death_0{0}.png"
 LASER = "enemy_sprites/laser.png"
 
+BLOCK_STAY = "enemy_sprites/block_stay.png"
+BLOCK_ATTACKING = "enemy_sprites/block_falling.png"
+
+SPIKES = "enemy_sprites/spikes.png"
+
 class Enemy_Bug(pg.sprite.Sprite):
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  INIT DEL PLAYER  -------------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     def __init__(self, coord_x, coord_y,is_looking_right,limit_left,limit_right, frame_rate_animation=100, frame_rate_movement=100, speed_walk=10,scale=1):
         super().__init__()
-        # Vida del Enemigo
-        self.__lives = 3
-
-        # Para saber si es un enemigo que dispara o no
+        # Variables generales
         self.is_shooter = False
+        self.insta_kill = False
+        self.is_death = False
+        
+        # Vida del Enemigo
+        self.__lives = 3        
         
         # Limites de movimiento en x
         self.__limit_left = limit_left
@@ -28,8 +35,7 @@ class Enemy_Bug(pg.sprite.Sprite):
 
         # Variable auxiliar
         self.__is_looking_right = is_looking_right
-        self.is_death = False
-
+        
         # Tiempo para hacer que el enemigo no reciba daño por un ratito si le acaba de pasar
         self.__damage_frame_time = 300
         self.__enemy_damage_time = 0
@@ -68,7 +74,7 @@ class Enemy_Bug(pg.sprite.Sprite):
     
     def player_collitions(self, delta_ms, player):
         self.__enemy_damage_time += delta_ms
-        if pg.sprite.spritecollide(self, player.sprite.bullet_group, True) and self.__enemy_damage_time >= self.__damage_frame_time:
+        if pg.sprite.spritecollide(self, player.sprite.bullet_group, True) and self.__enemy_damage_time >= self.__damage_frame_time and not self.is_death:
             self.__enemy_damage_time = 0
             self.__lives -= 1
     
@@ -145,23 +151,23 @@ class Enemy_Alien(pg.sprite.Sprite):
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     def __init__(self, coord_x, coord_y, is_looking_right, frame_rate_animation=100,scale=1):
         super().__init__()
+        # Variables generales
+        self.is_shooter = True
+        self.insta_kill = False
+        self.is_death = False
 
         # Vida del Enemigo
         self.__lives = 3   
 
-        # Para saber si es un enemigo que dispara o no
-        self.is_shooter = True                  
-        
         # Cosas de balas
         self.bullet_group = pg.sprite.Group()
         self.__bullet_speed = 3
         self.__bullet_scale = 0.5
         self.__shoot_time = 0
-        self.__bullet_cooldown = 1000
+        self.__bullet_cooldown = 2000
         
         # Variable auxiliar
         self.__is_looking_right = is_looking_right
-        self.is_death = False
 
         # Tiempo para hacer que el enemigo no reciba daño por un ratito si le acaba de pasar
         self.__damage_frame_time = 300
@@ -179,7 +185,7 @@ class Enemy_Alien(pg.sprite.Sprite):
         
         # Animacion dinamica
         self.__frame = 0                                            # Frame actual de la animacion que se esta reproduciendo. Se inicializa en 0
-        self.__animacion_actual = self.__stay                     # Se guarda la animacion que se esta reproduciendo. Se inicializa con Idle
+        self.__animacion_actual = self.__stay                       # Se guarda la animacion que se esta reproduciendo. Se inicializa con Idle
         self.__image = self.__animacion_actual[self.__frame]        # Imagen actual que se esta reproducindo en la pantalla
         self.__frame_rate_animation = frame_rate_animation          # Variable que guarda la velocidad con la que se cambia la imagen
         self.__enemy_animation_time = 0                             # Variable que guarda el tiempo transcurrido desde que cambio la imagen
@@ -189,7 +195,10 @@ class Enemy_Alien(pg.sprite.Sprite):
         self.__rect.x = coord_x
         self.__rect.y = coord_y - self.rect.height
 
-        self.shooting_colition_rect = pg.Rect(self.rect.x, self.rect.y - self.rect.height / 2, ANCHO_VENTANA - self.rect.x, self.rect.height * 1.5)
+        if self.__is_looking_right:
+            self.shooting_colition_rect = pg.Rect(self.rect.x, self.rect.y - self.rect.height / 2, ANCHO_VENTANA - self.rect.x, self.rect.height * 1.5)
+        else:
+            self.shooting_colition_rect = pg.Rect(36, self.rect.y - self.rect.height / 2, ANCHO_VENTANA - 36*2, self.rect.height * 1.5)
         # Rectangulo al que si el Jugador coliciona se pone a disparar
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -203,7 +212,7 @@ class Enemy_Alien(pg.sprite.Sprite):
     
     def player_collitions(self, delta_ms, player):
         self.__enemy_damage_time += delta_ms
-        if pg.sprite.spritecollide(self, player.sprite.bullet_group, True) and self.__enemy_damage_time >= self.__damage_frame_time:
+        if pg.sprite.spritecollide(self, player.sprite.bullet_group, True) and self.__enemy_damage_time >= self.__damage_frame_time and not self.is_death:
             self.__enemy_damage_time = 0
             self.__lives -= 1
     
@@ -219,7 +228,7 @@ class Enemy_Alien(pg.sprite.Sprite):
                     self.kill()
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
-    # ---------------------------------------------  ACTUALIZACIONES DEL Enemigo  -------------------------------------------------------------------- #
+    # ---------------------------------------------  ACTUALIZACIONES DEL ENEMIGO  -------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     def do_animation(self, delta_ms):
         self.__enemy_animation_time += delta_ms
@@ -256,3 +265,103 @@ class Enemy_Alien(pg.sprite.Sprite):
     def rect(self,rect):
         self.__rect = rect    
     
+class Enemy_Block(pg.sprite.Sprite):
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    # ---------------------------------------------------  INIT DEL PLAYER  -------------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    def __init__(self, coord_x, coord_y, fall_top,gravity=20, frame_rate_movement=100,scale=1):
+        super().__init__()
+        # Variables generales
+        self.is_shooter = False
+        self.insta_kill = False
+        self.is_death = False
+
+        # Variable auxiliar
+        self.__is_getting_back = False
+
+        # Animaciones
+        self.__stay = sf.getSurfaceFromFile(BLOCK_STAY,flip=False,scale=scale)
+        self.__attacking = sf.getSurfaceFromFile(BLOCK_ATTACKING,flip=False,scale=scale)
+        self.__gravity = gravity
+        self.__fall_top = fall_top
+        self.__up_top = coord_y - 5
+        
+        # Animacion dinamica
+        self.__image = self.__stay                                  # Imagen actual que se esta reproducindo en la pantalla
+
+        self.__rect = self.image.get_rect()                         # Se obtiene el rectangulo de la imagen
+        self.__rect.centerx = coord_x
+        self.__rect.y = coord_y
+
+        # Posicion en pantalla y dinamicas del movimiento
+        self.__move_y = 0
+        self.__enemy_move_time = 0                                  # Variable que guarda el tiempo transcurrido desde que ejecuto un movimiento
+        self.__frame_rate_movement = frame_rate_movement            # Variable que guarda la velocidad con la que se ejecuta el movimiento
+
+        self.attacking_colition_rect = pg.Rect(self.rect.x-15, self.rect.y + self.rect.height, self.rect.width + 30, self.__fall_top - self.rect.y)
+        
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    # ---------------------------------------------------  FUNCIONES DE ACCIONES  -------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    def attack(self,player):
+        if self.rect.y + self.rect.height >= self.__fall_top:
+            self.__image = self.__stay
+            self.__is_getting_back = True
+            self.__move_y = - 3
+            print("Entro a volver")
+        elif self.rect.y <= self.__up_top:
+            print("Entro a bajar")
+            self.__is_getting_back = False
+            self.__move_y = 0
+            self.rect.y = self.__up_top + 5
+        elif self.attacking_colition_rect.colliderect(player.sprite.rect) and not self.__is_getting_back:
+            print("Entro a atacar")
+            self.__image = self.__attacking
+            self.__move_y = self.__gravity
+        
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    # ---------------------------------------------  ACTUALIZACIONES DEL ENEMIGO  -------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    def do_movement(self, delta_ms):
+        self.__enemy_move_time += delta_ms
+        if self.__enemy_move_time >= self.__frame_rate_movement:
+            self.__enemy_move_time = 0
+            self.__rect.y += self.__move_y
+
+    def update(self, delta_ms, player):
+        self.attack(player)
+        self.do_movement(delta_ms)
+    
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    # --------------------------------------------------  GETTERS Y SETTERS  ------------------------------------------------------------------------- #
+    # ------------------------------------------------------------------------------------------------------------------------------------------------ #
+    @property
+    def image(self):
+        return self.__image
+    @image.setter
+    def image(self,image):
+        self.__image = image
+    
+    @property
+    def rect(self):
+        return self.__rect
+    @rect.setter
+    def rect(self,rect):
+        self.__rect = rect
+
+class Enemy_Spikes(pg.sprite.Sprite):
+    def __init__(self,pos_x,pos_y,scale=1):
+        super().__init__()
+        # Variables generales
+        self.is_shooter = False
+        self.insta_kill = True
+        self.is_death = False
+
+        # Imagen y posicion
+        self.image = sf.getSurfaceFromFile(SPIKES,flip=False,scale=scale)
+        self.rect = self.image.get_rect(x=pos_x, y=pos_y)
+
+        # Para saber si es un enemigo que dispara o no
+        self.is_shooter = False
+        self.insta_kill = True
+        self.is_death = False

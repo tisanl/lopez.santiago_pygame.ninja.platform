@@ -25,30 +25,26 @@ while True:
         if event.type == pg.QUIT:
                 pg.quit() 
                 sys.exit()
-        if event.type == evento_1_segundo and game.is_running_level:
+        if event.type == evento_1_segundo and game.is_running == RUNNING_GAME:
             game.timer.update()
+        if pg.key.get_pressed()[pg.K_p] and game.is_running == RUNNING_GAME:
+            game.is_running = MENU_PAUSA
 
     # Se actualiza el tiempo transcurrido
     delta_ms = clock.tick(FPS)
     
-    if game.is_running_menu_principal:
-        game.mostrar_menu_principal(screen,lista_eventos)
+    match game.is_running:
+        case "Menu Principal":
+            game.mostrar_menu_principal(screen,lista_eventos)
+        case "Menu Seleccion de Nivel":
+            game.mostrar_menu_seleccion_nivel(screen,lista_eventos,delta_ms)
+            if game.level_selected != None:
+                game.is_running = RUNNING_GAME
+        case "Juego":
+            game.run(screen,delta_ms)
+        case "Post Game":
+            game.mostrar_menu_post_game(screen,lista_eventos,delta_ms)
+        case "En Pausa":
+            game.mostrar_menu_pausa(screen,lista_eventos,delta_ms)
     
-    if game.is_selecting_level:
-        game.mostrar_menu_seleccion_nivel(screen,lista_eventos,delta_ms)
-    
-    if game.level_selected != None:
-        match game.level_selected:
-            case 1:
-                game.nivel_1()
-            case 2:
-                game.nivel_2()
-            case 3:
-                game.nivel_3()
-        game.level_selected = None
-        game.is_running_level = True
-
-    if game.is_running_level:
-        game.run(screen,delta_ms)
-
     pg.display.update()

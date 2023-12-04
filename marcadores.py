@@ -2,9 +2,9 @@ import pygame as pg
 from constantes import *
 
 class MarcadorTiempo:
-    def __init__(self, minutos, pos_x, pos_y,size=10):
+    def __init__(self, minutos, segundos,pos_x, pos_y,size=10):
         self.__minutos = minutos
-        self.__segundos = 1
+        self.__segundos = segundos
         
         self.__pos_x = pos_x
         self.__pos_y = pos_y

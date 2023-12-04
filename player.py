@@ -78,7 +78,7 @@ class Player(pg.sprite.Sprite):
         self.__player_animation_time = 0                            # Variable que guarda el tiempo transcurrido desde que cambio la imagen
 
         # Posicion en pantalla
-        self.__rect = self.image.get_rect(x=coord_x,y=coord_y)                                                  # Se obtiene el rectangulo de la imagen
+        self.__rect = self.image.get_rect(x=coord_x,y=coord_y-self.image.get_rect().height)                                                  # Se obtiene el rectangulo de la imagen
         self.__player_foot = pg.Rect(self.rect.x +3, self.rect.y + self.rect.height + 1, self.rect.width-6, 3)  # Rectangulo de los pies del Jugador
         self.player_side_left = pg.Rect(self.rect.x -1 , self.rect.y, 1, self.rect.height)                      # Rectangulo del lado izquierdo del Jugador
         self.player_side_right = pg.Rect(self.rect.x + self.rect.width + 1, self.rect.y, 1, self.rect.height)   # Rectangulo del lado derecho del Jugador
@@ -89,6 +89,15 @@ class Player(pg.sprite.Sprite):
         self.__move_y = 0                   # La posicion en y del Jugador
         self.__player_move_time = 0         # Variable que guarda el tiempo transcurrido desde que ejecuto un movimiento
 
+        # Sonido
+        self.__run_sound = pg.mixer.Sound('sonidos/player/correr.ogg')
+        self.__attack_sound = pg.mixer.Sound('sonidos/player/throw.ogg')
+        self.__pick_coin = pg.mixer.Sound('sonidos/player/moneda.ogg')
+
+        self.__sound = None
+        self.__frame_rate_sound = 300
+        self.__player_sound_time = 0
+
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # -----------------------------------------------------  MANEJO DE EVENTOS  ---------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -98,6 +107,7 @@ class Player(pg.sprite.Sprite):
         # Run
         if keys[pg.K_RIGHT] and not keys[pg.K_LEFT] and not keys[pg.K_SPACE] and not self.__is_jumping and not self.__is_falling and not self.__is_shooting:
             self.run('Right')
+            
         if keys[pg.K_LEFT] and not keys[pg.K_RIGHT] and not keys[pg.K_SPACE] and not self.__is_jumping and not self.__is_falling and not self.__is_shooting:
             self.run('Left')
         
@@ -147,6 +157,7 @@ class Player(pg.sprite.Sprite):
     def run(self, direction: str = 'Right'):
         if self.__animacion_actual != self.__run_r and self.__animacion_actual != self.__run_l:
             self.__frame = 0
+        self.__sound = self.__run_sound
         match direction:
             case 'Right':
                 self.__set_x_animations_preset(self.__speed_run, self.__run_r, True)
@@ -159,10 +170,12 @@ class Player(pg.sprite.Sprite):
             self.__frame = 0
             self.__move_x = 0
             self.__move_y = 0
+            self.__sound = None
 
     def jump(self, direction:str):
         if self.__animacion_actual != self.__jump_r and self.__animacion_actual != self.__jump_l and self.__animacion_actual != self.__jump_shoot_r and self.__animacion_actual != self.__jump_shoot_l:
             self.__frame = 0
+        self.__sound = None
         match direction:
             case 'Right':
                 if self.__is_shooting:
@@ -189,6 +202,7 @@ class Player(pg.sprite.Sprite):
     def fall(self, direction:str):
         if self.__animacion_actual != self.__jump_r and self.__animacion_actual != self.__jump_l and self.__animacion_actual != self.__jump_shoot_r and self.__animacion_actual != self.__jump_shoot_l:
             self.__frame = 0
+        self.__sound = None
         match direction:
             case 'Right':
                 if self.__is_shooting:
@@ -225,6 +239,7 @@ class Player(pg.sprite.Sprite):
             self.__is_shooting = True
             self.__shoot_time = 0
             self.bullet_group.add(Bullet(SPRITE_BULLET,self.__rect.x,self.__rect.centery,self.__bullet_speed,self.__is_looking_right,scale=self.__bullet_scale))
+            self.__attack_sound.play()
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  FUNCIONES DE COLICIONES  ------------------------------------------------------------------ #
@@ -236,8 +251,13 @@ class Player(pg.sprite.Sprite):
         
         colide = False
         self.__player_damage_time += delta_ms
-        if pg.sprite.spritecollide(self, enemy_group, False):
-            colide = True
+        enemigos = pg.sprite.spritecollide(self, enemy_group, False)
+        for enemigo in enemigos:
+            if enemigo.insta_kill:
+                self.lives_actual -= 3
+                break    
+            if not enemigo.is_death:
+                colide = True
         for enemy in enemy_group:
             if enemy.is_shooter:
                 if pg.sprite.spritecollide(self, enemy.bullet_group, True):
@@ -249,6 +269,7 @@ class Player(pg.sprite.Sprite):
     def coin_collitions(self, coin_group):
         if pg.sprite.spritecollide(self, coin_group, True):    
             self.__points += self.__coin_points
+            self.__pick_coin.play()
 
         
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -328,6 +349,13 @@ class Player(pg.sprite.Sprite):
                 self.__frame = 0
             self.image = self.__animacion_actual[self.__frame]
     
+    def do_sound(self, delta_ms):
+        self.__player_sound_time += delta_ms
+        if self.__player_sound_time >= self.__frame_rate_sound:
+            self.__player_sound_time = 0
+            if self.__sound != None:
+                self.__sound.play() 
+    
     def update(self, delta_ms,platform_group,enemy_group,coin_group):
         self.bullet_group.update()
         self.enemy_collitions(delta_ms, enemy_group)
@@ -337,6 +365,7 @@ class Player(pg.sprite.Sprite):
         self.marcador_puntuacion.update(self.__points)
         self.do_movement(delta_ms,platform_group)
         self.do_animation(delta_ms)
+        self.do_sound(delta_ms)
     
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # --------------------------------------------------  GETTERS Y SETTERS  ------------------------------------------------------------------------- #
