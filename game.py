@@ -11,6 +11,7 @@ from gui import MenuSeleccionNivel
 from gui import MenuPrincipal
 from gui import MenuPostGame
 from gui import MenuPausa
+from gui import MenuSonido
 from platforms import Platform
 from platforms import Marco
 from items import Coin
@@ -30,6 +31,7 @@ class Game:
         # Variables controladoras de que es lo que se esta ejecutando
         self.is_running = MENU_PRINCIPAL
         self.level_selected = None                  # Esta variable guarda si hay algun nivel seleccionado
+        self.was_running = MENU_PRINCIPAL
 
         # Variables que guardan los objetos del Nivel mientras se esta corriendo
         self.player = pg.sprite.GroupSingle()       # Jugador, grupo Simple
@@ -46,9 +48,13 @@ class Game:
         self.menu_seleccion_nivel = MenuSeleccionNivel()
         self.menu_post_game = None
         self.menu_pausa = MenuPausa()
+        self.menu_sonido = MenuSonido()
         self.cursor = pg.sprite.GroupSingle(Cursor())
 
         self.timer = None
+
+        # Sonido
+        self.volume = 0.1
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ------------------------------------------------------  FUNCIONES DE GUI  ---------------------------------------------------------------------- #
@@ -125,6 +131,35 @@ class Game:
         self.menu_pausa.button_group.draw(screen)
         self.cursor.draw(screen)
     
+    def mostrar_menu_sonido(self, screen, eventos, delta_ms):
+        pg.mouse.set_visible(False)
+        self.cursor.update()
+        self.enter_menu += delta_ms
+        if self.enter_menu >= self.cooldown_menus:
+            self.menu_sonido.update(eventos, self, delta_ms)
+        
+        if self.was_running == MENU_PAUSA:
+            # Ultimas imagenes del juego
+            screen.blit(self.menu_principal.fondo, self.menu_principal.fondo.get_rect())
+            self.coin_group.draw(screen)
+            self.enemy_group.draw(screen)
+            for enemy in self.enemy_group:              # Por cada enemigo
+                if enemy.is_shooter:                    # Si dispara
+                    enemy.bullet_group.draw(screen)
+            self.player.draw(screen)
+            self.player.sprite.bullet_group.draw(screen)            # Se dibuja su grupo de balas
+            self.player.sprite.marcador_puntuacion.draw(screen)     # Se dibuja el marcoador de puntuacion
+            self.player.sprite.lives_group.draw(screen)
+            self.timer.draw(screen)
+            self.platform_group.draw(screen)
+            self.marco.draw(screen)
+        else:
+            screen.blit(self.menu_principal.fondo, self.menu_principal.fondo.get_rect())
+            self.menu_principal.button_group.draw(screen)
+
+        screen.blit(self.menu_sonido.fondo, self.menu_sonido.fondo_rect)
+        self.menu_sonido.button_group.draw(screen)
+        self.cursor.draw(screen)
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  FUNCIONES DE NIVEL  ----------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #

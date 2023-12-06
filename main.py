@@ -46,5 +46,8 @@ while True:
             game.mostrar_menu_post_game(screen,lista_eventos,delta_ms)
         case "En Pausa":
             game.mostrar_menu_pausa(screen,lista_eventos,delta_ms)
+        case "Configurando Sonido":
+            game.mostrar_menu_sonido(screen,lista_eventos,delta_ms)
+
     
     pg.display.update()
