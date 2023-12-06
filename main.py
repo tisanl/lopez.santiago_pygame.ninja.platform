@@ -49,5 +49,6 @@ while True:
         case "Configurando Sonido":
             game.mostrar_menu_sonido(screen,lista_eventos,delta_ms)
 
-    
+    game.update_volume()
+        
     pg.display.update()

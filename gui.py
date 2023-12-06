@@ -268,6 +268,7 @@ class MenuSonido:
         # Variables Auxiliares
         self.select_button = 0                  # Variable que guarda el tiempo de cuando se entro al menu
         self.cooldown_select_button = 100       # Variable que pone un cooldawn para poder empezar a interactuar con el menu
+        self.music_on_of = True
 
         # Botones
         self.button_group = pg.sprite.Group()
@@ -294,14 +295,20 @@ class MenuSonido:
                 for boton in lista_botones:
                     if boton == self.button_sound_on_off:
                         self.button_sound_on_off.switch()
+                        if self.music_on_of:
+                            pg.mixer.music.pause()
+                            self.music_on_of = False
+                        else:
+                            pg.mixer.music.unpause()
+                            self.music_on_of = True
                     elif boton == self.subir_sonido:
-                        game.volume += 0.1
-                        self.volumen.update_text(f"{round(game.volume*100)}%")
-                        print(game.volume)
+                        if game.volume <= 0.9:
+                            game.volume += 0.1
+                            self.volumen.update_text(f"{round(game.volume*100)}%")
                     elif boton == self.bajar_sonido:
-                        game.volume -= 0.1
-                        print(game.volume)
-                        self.volumen.update_text(f"{round(game.volume*100)}%")
+                        if game.volume >= 0.1:    
+                            game.volume -= 0.1
+                            self.volumen.update_text(f"{round(game.volume*100)}%")
                     elif boton == self.volver:
                         if game.was_running == MENU_PRINCIPAL:
                             game.is_running = MENU_PRINCIPAL

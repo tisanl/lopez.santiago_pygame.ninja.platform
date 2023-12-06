@@ -23,6 +23,8 @@ NUBE_IZQUIERDA = "platform_sprites/nube_izquierda.png"
 NUBE_DERECHA = "platform_sprites/nube_derecha.png"
 NUBE_CENTRO = "platform_sprites/nube_medio.png"
 
+MUSICA = "sonidos\Bizarrap ft Quevedo - Quevedo Bzrp Music Sessions, Vol. 52.mp3"
+
 class Game:
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  INIT DEL JUEGO  --------------------------------------------------------------------------- #
@@ -55,6 +57,10 @@ class Game:
 
         # Sonido
         self.volume = 0.1
+        
+        pg.mixer.music.load("sonidos/Bizarrap ft Quevedo - Quevedo Bzrp Music Sessions, Vol. 52.mp3")
+        pg.mixer.music.set_volume(self.volume)
+        pg.mixer.music.play(-1)
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ------------------------------------------------------  FUNCIONES DE GUI  ---------------------------------------------------------------------- #
@@ -420,7 +426,8 @@ class Game:
 
         self.timer = MarcadorTiempo(5,45,140,36,20)
     
-
+    def update_volume(self):
+        pg.mixer.music.set_volume(self.volume)
 
         
         
