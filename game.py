@@ -4,6 +4,7 @@ from enemy import Enemy_Bug
 from enemy import Enemy_Alien
 from enemy import Enemy_Block
 from enemy import Enemy_Spikes
+from enemy import EnemyBugSpawner
 from constantes import *
 from auxiliar import SurfaceManager as sf
 from gui import Cursor
@@ -12,6 +13,8 @@ from gui import MenuPrincipal
 from gui import MenuPostGame
 from gui import MenuPausa
 from gui import MenuSonido
+from gui import MenuPuntuaciones
+from gui import MenuGuardarPuntuacion
 from platforms import Platform
 from platforms import Marco
 from items import Coin
@@ -41,6 +44,7 @@ class Game:
         self.marco = pg.sprite.Group()              # Variable que guarda los objetos del Marco del nivel (plataformas)
         self.platform_group = pg.sprite.Group()     # Platforms, grupo que guarda las plataformas propias del nivel
         self.coin_group = pg.sprite.Group()
+        self.spawner_group = pg.sprite.Group()
         
         # Variables Auxiliares
         self.enter_menu = 0             # Variable que guarda el tiempo de cuando se entro al menu
@@ -51,6 +55,8 @@ class Game:
         self.menu_post_game = None
         self.menu_pausa = MenuPausa()
         self.menu_sonido = MenuSonido()
+        self.menu_puntuaciones = MenuPuntuaciones()
+        self.menu_guardar_puntuacion = MenuGuardarPuntuacion()
         self.cursor = pg.sprite.GroupSingle(Cursor())
 
         self.timer = None
@@ -166,6 +172,56 @@ class Game:
         screen.blit(self.menu_sonido.fondo, self.menu_sonido.fondo_rect)
         self.menu_sonido.button_group.draw(screen)
         self.cursor.draw(screen)
+
+    def mostrar_menu_puntuaciones(self, screen, eventos, delta_ms):
+        pg.mouse.set_visible(False)
+        self.cursor.update()
+        self.enter_menu += delta_ms
+        if self.enter_menu >= self.cooldown_menus:
+            self.menu_puntuaciones.update(eventos, self)
+        
+        screen.blit(self.menu_puntuaciones.fondo, self.menu_puntuaciones.fondo.get_rect())
+        self.menu_puntuaciones.button_group.draw(screen)
+
+        if self.menu_puntuaciones.dibujar_puntajes:
+            screen.blit(self.menu_puntuaciones.fondo_puntajes, self.menu_puntuaciones.fondo_puntajes_rect)
+            self.menu_puntuaciones.puntajes_group.draw(screen)
+            
+        self.cursor.draw(screen)
+
+    def mostrar_menu_guardar_puntuacion(self, screen, eventos, delta_ms):
+        pg.mouse.set_visible(False)
+        self.cursor.update()
+        self.enter_menu += delta_ms
+        if self.enter_menu >= self.cooldown_menus:
+            self.menu_guardar_puntuacion.update(eventos, self)
+            #self.menu_guardar_puntuacion.imprimir_puntajes()
+        
+        # Ultimas imagenes del juego
+        screen.blit(self.menu_principal.fondo, self.menu_principal.fondo.get_rect())
+        self.coin_group.draw(screen)
+        self.enemy_group.draw(screen)
+        for enemy in self.enemy_group:              # Por cada enemigo
+            if enemy.is_shooter:                    # Si dispara
+                enemy.bullet_group.draw(screen)
+        self.player.draw(screen)
+        self.player.sprite.bullet_group.draw(screen)            # Se dibuja su grupo de balas
+        self.player.sprite.marcador_puntuacion.draw(screen)     # Se dibuja el marcoador de puntuacion
+        self.player.sprite.lives_group.draw(screen)
+        self.timer.draw(screen)
+        self.platform_group.draw(screen)
+        self.marco.draw(screen)
+
+        screen.blit(self.menu_guardar_puntuacion.fondo, self.menu_guardar_puntuacion.fondo_rect)
+        self.menu_guardar_puntuacion.button_group.draw(screen)
+
+        #screen.blit(self.menu_guardar_puntuacion.fondo_puntajes, self.menu_guardar_puntuacion.fondo_puntajes_rect)
+        #self.menu_guardar_puntuacion.puntajes_group.draw(screen)
+        
+        self.cursor.draw(screen)
+
+
+
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  FUNCIONES DE NIVEL  ----------------------------------------------------------------------- #
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
@@ -181,6 +237,10 @@ class Game:
         # Se actualizan y dibujan enemigos
         self.enemy_group.update(delta_ms,self.player)
         self.enemy_group.draw(screen)
+
+        # Se actualizan y dibujan spawners
+        self.spawner_group.update(delta_ms,self.enemy_group)
+        self.spawner_group.draw(screen)
 
         for enemy in self.enemy_group:              # Por cada enemigo
             if enemy.is_shooter:                    # Si dispara
@@ -255,6 +315,9 @@ class Game:
         self.enemy_group.add(Enemy_Bug(500, GROUND_LEVEL, True, limit_left=400,limit_right=750, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
         self.enemy_group.add(Enemy_Alien(50, 200, True, frame_rate_animation=400,scale=2))
 
+        # Spawners
+        self.spawner_group = pg.sprite.Group()
+
         # Monedas
         self.coin_group = pg.sprite.Group()
         monedas = [{"largo": 5, "x" : 50, "y" : 320, "salteo" : True, "espacio" : 80},
@@ -321,6 +384,9 @@ class Game:
         self.enemy_group.add(Enemy_Block((ANCHO_VENTANA/8)*4, 100, 384, frame_rate_movement=50,scale=2))
         self.enemy_group.add(Enemy_Block((ANCHO_VENTANA/8)*6-18, 100, 384, frame_rate_movement=50,scale=2))
 
+        # Spawners
+        self.spawner_group = pg.sprite.Group()
+
         for i in range(14):
             x = 148 + 36 * i
             self.enemy_group.add(Enemy_Spikes(x,456,scale=2))    
@@ -374,7 +440,10 @@ class Game:
             self.platform_group.add(Platform(MURO_PIEDRA,692,y,scale=2))
 
         self.platform_group.add(Platform(PISO_PIEDRA,36,206,is_platform=True,scale=2))
-        self.platform_group.add(Platform(MURO_PIEDRA,36,236,scale=2))
+        for i in range(9):
+            y = 236 + 30 * i
+            self.platform_group.add(Platform(MURO_PIEDRA,36,y,scale=2))
+        
         self.platform_group.add(Platform(PISO_PIEDRA,576,206,is_platform=True,scale=2))
         self.platform_group.add(Platform(MURO_PIEDRA,576,236,scale=2))
 
@@ -397,12 +466,18 @@ class Game:
         for i in range(14):
             x = 72 + 36 * i
             self.enemy_group.add(Enemy_Spikes(x,236,scale=2)) 
-        self.enemy_group.add(Enemy_Bug(300, GROUND_LEVEL, True, limit_left=100,limit_right=700, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
-        self.enemy_group.add(Enemy_Bug(464, GROUND_LEVEL, False, limit_left=100,limit_right=700, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
+        #self.enemy_group.add(Enemy_Bug(300, GROUND_LEVEL, True, limit_left=100,limit_right=700, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
+        #self.enemy_group.add(Enemy_Bug(464, GROUND_LEVEL, False, limit_left=100,limit_right=700, frame_rate_animation=400,frame_rate_movement=50, speed_walk=3,scale=2))
         self.enemy_group.add(Enemy_Block(80*2, 300, GROUND_LEVEL, frame_rate_movement=50,scale=2))
         self.enemy_group.add(Enemy_Block(80*4, 300, GROUND_LEVEL, frame_rate_movement=50,scale=2))
         self.enemy_group.add(Enemy_Block(80*6, 300, GROUND_LEVEL, frame_rate_movement=50,scale=2))
         self.enemy_group.add(Enemy_Alien(680, 206, False, frame_rate_animation=400,scale=2))
+
+        # Spawners
+        self.spawner_group = pg.sprite.Group()
+        bug = {"pos_x":72,"pos_y":GROUND_LEVEL,"is_looking_right":True,"limit_left":150,"limit_right":650,
+                "frame_rate_animation": 400,"frame_rate_movement":50,"speed_walk":3,"scale":2}
+        self.spawner_group.add(EnemyBugSpawner(72,GROUND_LEVEL-36,bug,frame_spawn_time=7000,scale=2))
 
         # Monedas
         self.coin_group = pg.sprite.Group()

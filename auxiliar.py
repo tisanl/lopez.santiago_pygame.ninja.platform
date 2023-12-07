@@ -1,7 +1,7 @@
 import pygame as pg
+import json
 
 class SurfaceManager:
-    
     @staticmethod
     def get_surface_from_spritesheet(img_path: str, cols: int, rows: int, step = 1, flip: bool = False) -> list[pg.surface.Surface]:
         sprites_list = list()
@@ -56,3 +56,22 @@ class SurfaceManager:
             surface_fotograma = pg.transform.flip(surface_fotograma,True,False).convert_alpha() 
             
         return surface_fotograma
+
+class FilesManager:
+    @staticmethod
+    def leer_archivo_json(nombre_file:str,key) -> list:
+        '''
+        Leera un archivo json y devolvera la lista que hay en la clave
+        Dicho archivo se abrirá en modo lectura únicamente y retornará el equipo como una lista de diccionarios.
+        Recibe por parámetro un string que indicará el nombre y extensión del archivo a leer
+        Devuelve el diccionario buscado o None si no pudo
+        '''
+        try:
+            with open(nombre_file, "r",encoding='utf-8',errors='ignore') as file:
+                objeto_json = json.load(file)
+                diccionario = objeto_json.get(key)                
+        except:
+            print("\nNo se a podido descargar la informacion")
+            return None
+        else:
+            return diccionario

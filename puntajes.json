@@ -1,0 +1,18 @@
+{
+  "Puntajes" : {
+    "Nivel 1": [{"nombre": "Santiago", "puntaje": "000100" },
+                {"nombre": "Nivel 1 2", "puntaje": "000090" },
+                {"nombre": "Nivel 1 3", "puntaje": "000080" },
+                {"nombre": "Nivel 1 4", "puntaje": "000070" },
+                {"nombre": "Nivel 1 5", "puntaje": "000060" }],
+    "Nivel 2": [{"nombre": "Nivel 2 1", "puntaje": "000100" },
+                {"nombre": "Nivel 2 2", "puntaje": "000090" },
+                {"nombre": "Nivel 2 3", "puntaje": "000080" },
+                {"nombre": "Nivel 2 4", "puntaje": "000070" },
+                {"nombre": "Nivel 2 5", "puntaje": "000060" }],
+    "Nivel 3": [{"nombre": "Nivel 3 1", "puntaje": "000100" },
+                {"nombre": "Nivel 3 2", "puntaje": "000090" },
+                {"nombre": "Nivel 3 3", "puntaje": "000080" },
+                {"nombre": "Nivel 3 4", "puntaje": "000070" },
+                {"nombre": "Nivel 3 5", "puntaje": "000060" }]}
+}

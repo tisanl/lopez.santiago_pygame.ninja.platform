@@ -2,6 +2,7 @@ import pygame as pg
 from constantes import *
 from auxiliar import SurfaceManager as sf
 import sys
+from auxiliar import FilesManager as fl
 
 # CURSOR
 CURSOR = "gui_sprites/cursor.png"
@@ -10,11 +11,13 @@ CURSOR = "gui_sprites/cursor.png"
 FONDO_MENU_PRINCIPAL = "background/game_background_1.png"
 
 # FONDO BLANCO
-POST_GAME_FONDO = "gui_sprites/back.png"
+FONDO_BLANCO = "gui_sprites/back.png"
+FONDO_AMARILLO = "gui_sprites/back_amarillo.png"
 
 # BOTONES DE COLORES
 BOTON_LIMPIO = "gui_sprites/botones/boton_limpio.png"
 BOTON_LIMPIO_CUADRADO = "gui_sprites/botones/boton_limpio_cuadrado.png"
+BOTON_LIMPIO_CHIQUITO = "gui_sprites/botones/boton_limpio_chiquito.png"
 BOTON_AZUL = "gui_sprites/botones/boton_azul.png"
 BOTON_ROJO = "gui_sprites/botones/boton_rojo.png"
 BOTON_VERDE = "gui_sprites/botones/boton_verde.png"
@@ -82,6 +85,35 @@ class ButtonSwitch(pg.sprite.Sprite):
             self.image = self.image_2
             self.imagen_posterior = True
 
+class ButtonSwitchText(pg.sprite.Sprite):
+    def __init__(self, sprite_rute_1,sprite_rute_2,pos_x,pos_y,texto,size_text,scale=1):
+        super().__init__()
+        self.image_1 = sf.getSurfaceFromFile(sprite_rute_1,flip=False,scale=scale)
+        self.image_2 = sf.getSurfaceFromFile(sprite_rute_2,flip=False,scale=scale)
+        self.image = self.image_1
+        self.rect = self.image.get_rect(x=pos_x, y=pos_y)
+
+        self.rect = self.image.get_rect(x=pos_x, y=pos_y)
+
+        self.__font = pg.font.Font(FONT, size_text)
+        self.__text = self.__font.render(texto, True, "black")
+
+        self.x_del_texto = (self.rect.width - self.__text.get_width()) / 2
+        self.y_del_texto = (self.rect.height - self.__text.get_height()) / 2
+
+        self.image.blit(self.__text,(self.x_del_texto,self.y_del_texto))
+
+        self.imagen_posterior = False
+    
+    def switch(self):
+        if self.imagen_posterior:
+            self.image = self.image_1
+            self.imagen_posterior = False
+        else:
+            self.image = self.image_2
+            self.imagen_posterior = True
+        self.image.blit(self.__text,(self.x_del_texto,self.y_del_texto))
+
 class MenuPrincipal:
     def __init__(self):
         #Fondo
@@ -111,6 +143,8 @@ class MenuPrincipal:
                     elif boton == self.sonido:
                         game.is_running = CONFIGURACION_SONIDO
                         game.was_running = MENU_PRINCIPAL
+                    elif boton == self.puntuaciones:
+                        game.is_running = MENU_PUNTUACIONES
                     elif boton == self.salir:
                         pg.quit() 
                         sys.exit()
@@ -155,7 +189,7 @@ class MenuPostGame:
     def __init__(self,win:bool):
         #Fondo
         
-        self.fondo = pg.transform.scale(pg.image.load(POST_GAME_FONDO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
+        self.fondo = pg.transform.scale(pg.image.load(FONDO_BLANCO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
         x = ((ANCHO_VENTANA - self.fondo.get_width()) // 2)
         y = ((ALTO_VENTANA - self.fondo.get_height()) // 2)
         self.fondo_rect = self.fondo.get_rect(x=x, y=y)
@@ -193,6 +227,10 @@ class MenuPostGame:
                                 game.nivel_2()
                             case 3:
                                 game.nivel_3()
+                    elif boton == self.safe_points:
+                        game.is_running = GUARDANDO_PUNTUACION
+                        game.menu_guardar_puntuacion.level_selected = game.level_selected
+                        game.enter_menu = 0
                     elif boton == self.back_menu_principal:
                         game.is_running = MENU_PRINCIPAL
                         game.level_selected = None
@@ -206,7 +244,7 @@ class MenuPausa:
     def __init__(self):
         #Fondo
         
-        self.fondo = pg.transform.scale(pg.image.load(POST_GAME_FONDO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
+        self.fondo = pg.transform.scale(pg.image.load(FONDO_BLANCO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
         x = ((ANCHO_VENTANA - self.fondo.get_width()) // 2)
         y = ((ALTO_VENTANA - self.fondo.get_height()) // 2)
         self.fondo_rect = self.fondo.get_rect(x=x, y=y)
@@ -260,7 +298,7 @@ class MenuPausa:
 class MenuSonido:
     def __init__(self):
         #Fondo
-        self.fondo = pg.transform.scale(pg.image.load(POST_GAME_FONDO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
+        self.fondo = pg.transform.scale(pg.image.load(FONDO_BLANCO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
         self.x = ((ANCHO_VENTANA - self.fondo.get_width()) // 2)
         y = ((ALTO_VENTANA - self.fondo.get_height()) // 2)
         self.fondo_rect = self.fondo.get_rect(x=self.x, y=y)
@@ -314,4 +352,172 @@ class MenuSonido:
                             game.is_running = MENU_PRINCIPAL
                         else:
                             game.is_running = MENU_PAUSA
+                        game.enter_menu = 0
+
+class MenuPuntuaciones:
+    def __init__(self):
+        #Fondo
+        self.fondo = pg.transform.scale(pg.image.load(FONDO_MENU_PRINCIPAL), (ANCHO_VENTANA, ALTO_VENTANA))
+        
+        # Auxiliares
+        self.__click_level_boton = False
+        self.__level_selected = None
+        self.__boton_1_is_on = False
+        self.__boton_2_is_on = False
+        self.__boton_3_is_on = False
+        self.dibujar_puntajes = False
+
+        # Botones
+        self.button_group = pg.sprite.Group()
+        self.titulo = BotonConTexto(BOTON_LIMPIO,180,20,"PUNTUACIONES",45,scale=2.5)
+        y_botones_nivel = 150
+        self.nivel_1 = ButtonSwitchText(BOTON_AZUL,BOTON_AMARILLO,100,y_botones_nivel,"NIVEL 1",25,scale=1)
+        self.nivel_2 = ButtonSwitchText(BOTON_AZUL,BOTON_AMARILLO,300,y_botones_nivel,"NIVEL 2",25,scale=1)
+        self.nivel_3 = ButtonSwitchText(BOTON_AZUL,BOTON_AMARILLO,500,y_botones_nivel,"NIVEL 3",25,scale=1)
+        self.volver = BotonConTexto(BOTON_ROJO,20,550,"SALIR",20,scale=0.7)
+        self.button_group.add(self.titulo)
+        self.button_group.add(self.nivel_1)
+        self.button_group.add(self.nivel_2)
+        self.button_group.add(self.nivel_3)
+        self.button_group.add(self.volver)
+
+        # Botones Puntajes
+        #Fondo
+        self.puntajes_group = pg.sprite.Group()
+        self.fondo_puntajes = pg.transform.scale(pg.image.load(FONDO_AMARILLO), ((ANCHO_VENTANA/6)*3.2, (ALTO_VENTANA/6)*3.7))
+        self.x_puntajes = ((ANCHO_VENTANA - self.fondo_puntajes.get_width()) // 2)
+        self.y_puntajes = ((ALTO_VENTANA - self.fondo_puntajes.get_height()) // 2) * 1.8
+        self.fondo_puntajes_rect = self.fondo_puntajes.get_rect(x=self.x_puntajes, y=self.y_puntajes)
+    
+    def update_buttons(self):
+        if self.__level_selected == 1:
+            self.nivel_1.switch()
+            if self.__boton_1_is_on:
+                self.__boton_1_is_on = False
+            else:
+                self.__boton_1_is_on = True
+            if self.__boton_2_is_on:
+                self.nivel_2.switch()
+                self.__boton_2_is_on = False
+            if self.__boton_3_is_on:
+                self.nivel_3.switch()
+                self.__boton_3_is_on = False
+        if self.__level_selected == 2:
+            self.nivel_2.switch()
+            if self.__boton_2_is_on:
+                self.__boton_2_is_on = False
+            else:
+                self.__boton_2_is_on = True
+            if self.__boton_1_is_on:
+                self.nivel_1.switch()
+                self.__boton_1_is_on = False
+            if self.__boton_3_is_on:
+                self.nivel_3.switch()
+                self.__boton_3_is_on = False
+        if self.__level_selected == 3:
+            self.nivel_3.switch()
+            if self.__boton_3_is_on:
+                self.__boton_3_is_on = False
+            else:
+                self.__boton_3_is_on = True
+            if self.__boton_2_is_on:
+                self.nivel_2.switch()
+                self.__boton_2_is_on = False
+            if self.__boton_1_is_on:
+                self.nivel_1.switch()
+                self.__boton_1_is_on = False
+        self.__click_level_boton = False
+
+    def imprimir_puntajes(self):
+        self.puntajes_group = pg.sprite.Group()
+        key = f"Nivel {self.__level_selected}"
+        diccionario = fl.leer_archivo_json("puntajes.json","Puntajes")
+        lista_puntajes = diccionario[key]
+        x_nro = 30
+        x_nombre = 90
+        x_puntos = 250
+        y = 20
+        for i in range(len(lista_puntajes)):
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CUADRADO,self.x_puntajes+x_nro,self.y_puntajes+y,f"{i+1}.",20,scale=1.1))
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CHIQUITO,self.x_puntajes+x_nombre,self.y_puntajes+y,lista_puntajes[i]["nombre"],20,scale=1.5))
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CHIQUITO,self.x_puntajes+x_puntos,self.y_puntajes+y,str(lista_puntajes[i]["puntaje"]),20,scale=1.5))
+            y += 65
+
+    def update(self, eventos, game):
+        for evento in eventos:
+            if evento.type == pg.MOUSEBUTTONDOWN:
+                lista_botones = pg.sprite.spritecollide(game.cursor.sprite, self.button_group, False)
+                for boton in lista_botones:
+                    if boton == self.nivel_1:
+                        self.__level_selected = 1
+                        self.__click_level_boton = True
+                    elif boton == self.nivel_2:
+                        self.__level_selected = 2
+                        self.__click_level_boton = True
+                    elif boton == self.nivel_3:
+                        self.__level_selected = 3
+                        self.__click_level_boton = True
+                    elif boton == self.volver:
+                        game.is_running = MENU_PRINCIPAL
+                        game.enter_menu = 0
+                if self.__click_level_boton:
+                    self.update_buttons()
+                    self.dibujar_puntajes = True
+                    self.imprimir_puntajes()
+
+class MenuGuardarPuntuacion:
+    def __init__(self):
+        #Fondo
+        
+        self.fondo = pg.transform.scale(pg.image.load(FONDO_BLANCO), ((ANCHO_VENTANA/6)*4.5, (ALTO_VENTANA/6)*4.5))
+        x = ((ANCHO_VENTANA - self.fondo.get_width()) // 2)
+        y = ((ALTO_VENTANA - self.fondo.get_height()) // 2)
+        self.fondo_rect = self.fondo.get_rect(x=x, y=y)
+
+        # Botones
+        self.button_group = pg.sprite.Group()
+        self.titulo = BotonConTexto(BOTON_LIMPIO,x+100,y+30,"GUARDAR PUNTUACION",25,scale=2.1)
+        separacion_x = 190
+        separacion_y = 60
+        y_comienzo_botones = 200
+        self.aceptar = BotonConTexto(BOTON_VERDE,x+separacion_x,y_comienzo_botones,"ACEPTAR",25,scale=1.2)
+        self.cancelar = BotonConTexto(BOTON_ROJO,x+separacion_x,y_comienzo_botones+separacion_y,"CANCELAR",25,scale=1.2)
+        self.button_group.add(self.titulo)
+        self.button_group.add(self.aceptar)
+        self.button_group.add(self.cancelar)
+    '''
+        # Botones Puntajes
+        #Fondo
+        self.puntajes_group = pg.sprite.Group()
+        self.fondo_puntajes = pg.transform.scale(pg.image.load(FONDO_AMARILLO), ((ANCHO_VENTANA/6)*3.2, (ALTO_VENTANA/6)*3.7))
+        self.x_puntajes = ((ANCHO_VENTANA - self.fondo_puntajes.get_width()) // 2)
+        self.y_puntajes = ((ALTO_VENTANA - self.fondo_puntajes.get_height()) // 2) * 1.8
+        self.fondo_puntajes_rect = self.fondo_puntajes.get_rect(x=self.x_puntajes, y=self.y_puntajes)
+
+        self.level_selected = None
+    
+    def imprimir_puntajes(self):
+        self.puntajes_group = pg.sprite.Group()
+        key = f"Nivel {self.level_selected}"
+        diccionario = fl.leer_archivo_json("puntajes.json","Puntajes")
+        lista_puntajes = diccionario[key]
+        x_nro = 30
+        x_nombre = 90
+        x_puntos = 250
+        y = 20
+        for i in range(len(lista_puntajes)):
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CUADRADO,self.x_puntajes+x_nro,self.y_puntajes+y,f"{i+1}.",20,scale=1.1))
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CHIQUITO,self.x_puntajes+x_nombre,self.y_puntajes+y,lista_puntajes[i]["nombre"],20,scale=1.5))
+            self.puntajes_group.add(BotonConTexto(BOTON_LIMPIO_CHIQUITO,self.x_puntajes+x_puntos,self.y_puntajes+y,str(lista_puntajes[i]["puntaje"]),20,scale=1.5))
+            y += 65
+
+    '''
+
+    def update(self, eventos, game):
+        for evento in eventos:
+            if evento.type == pg.MOUSEBUTTONDOWN:
+                lista_botones = pg.sprite.spritecollide(game.cursor.sprite, self.button_group, False)
+                for boton in lista_botones:
+                    if boton == self.cancelar:
+                        game.is_running = RUNNING_POST_GAME
                         game.enter_menu = 0

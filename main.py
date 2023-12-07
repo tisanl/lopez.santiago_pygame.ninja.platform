@@ -48,6 +48,10 @@ while True:
             game.mostrar_menu_pausa(screen,lista_eventos,delta_ms)
         case "Configurando Sonido":
             game.mostrar_menu_sonido(screen,lista_eventos,delta_ms)
+        case "Menu Puntuaciones":
+            game.mostrar_menu_puntuaciones(screen,lista_eventos,delta_ms)
+        case "Guardando Puntuacion":
+            game.mostrar_menu_guardar_puntuacion(screen, lista_eventos, delta_ms)
 
     game.update_volume()
         

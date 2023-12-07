@@ -15,6 +15,8 @@ BLOCK_ATTACKING = "enemy_sprites/block_falling.png"
 
 SPIKES = "enemy_sprites/spikes.png"
 
+TUBERIA = "enemy_sprites/tuberia.png"
+
 class Enemy_Bug(pg.sprite.Sprite):
     # ------------------------------------------------------------------------------------------------------------------------------------------------ #
     # ---------------------------------------------------  INIT DEL PLAYER  -------------------------------------------------------------------------- #
@@ -361,7 +363,30 @@ class Enemy_Spikes(pg.sprite.Sprite):
         self.image = sf.getSurfaceFromFile(SPIKES,flip=False,scale=scale)
         self.rect = self.image.get_rect(x=pos_x, y=pos_y)
 
-        # Para saber si es un enemigo que dispara o no
-        self.is_shooter = False
-        self.insta_kill = True
-        self.is_death = False
+class EnemyBugSpawner(pg.sprite.Sprite):
+    def __init__(self,pos_x,pos_y,bug,frame_spawn_time,scale=1):
+        super().__init__()
+        # Imagen y posicion
+        self.image = sf.getSurfaceFromFile(TUBERIA,flip=False,scale=scale)
+        self.rect = self.image.get_rect(x=pos_x, y=pos_y)
+
+        # Bug
+        self.__bug = bug
+
+        # Cooldawn
+        self.__spawn_time = frame_spawn_time
+        self.__frame_spawn_time = frame_spawn_time
+    
+    def update(self, delta_ms,enemy_group):
+        self.__spawn_time += delta_ms
+        if self.__spawn_time >= self.__frame_spawn_time:
+            self.__spawn_time = 0
+            enemy_group.add(Enemy_Bug(self.__bug["pos_x"],
+                                        self.__bug["pos_y"],
+                                        self.__bug["is_looking_right"],
+                                        self.__bug["limit_left"],
+                                        self.__bug["limit_right"],
+                                        self.__bug["frame_rate_animation"],
+                                        self.__bug["frame_rate_movement"],
+                                        self.__bug["speed_walk"],
+                                        self.__bug["scale"]))
